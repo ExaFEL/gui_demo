@@ -11,6 +11,6 @@
   conda install -y wxpython libiconv Tornado <br />
 
   # cctbx
-  python bootstrap.py hot update --builder=xfel --cciuser=<username> --sfuser=<username> <br />
+  python bootstrap.py hot update --builder=xfel --cciuser=/<username/> --sfuser=/<username/> <br />
   python bootstrap.py build --builder=xfel --with-python=`which python` --nproc=32 <br />
   cd build; make
