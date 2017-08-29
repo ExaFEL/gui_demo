@@ -18,5 +18,5 @@
 # Running
   module load python <br />
   source activate gui_demo <br />
-  source \<cctbx installation>/build/setpaths_all.sh
+  source \<cctbx installation>/build/setpaths_all.sh <br />
   python gui.py
