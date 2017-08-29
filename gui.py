@@ -1,5 +1,8 @@
 import argparse
+import os
 import wx
+
+from wxtbx import bitmaps
 
 # =============================================================================
 class MonitorFrame(wx.Frame):
@@ -9,7 +12,7 @@ class MonitorFrame(wx.Frame):
   def __init__(self, parent, args):
     size = (args.width, args.height)
     wx.Frame.__init__(self, parent, title='Status Monitor', size=size)
-    self.main_panel = wx.Panel(self)
+    # self.main_panel = wx.Panel(self)
     main_sizer = wx.BoxSizer(wx.VERTICAL)
 
     # timer
@@ -17,31 +20,86 @@ class MonitorFrame(wx.Frame):
     self.timer = wx.Timer(self)
     self.Bind(wx.EVT_TIMER, self.UpdateView, self.timer)
 
+    # section for progress
+    progress_panel = wx.Panel(self, style=wx.SUNKEN_BORDER)
+    progress_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    self.directory = os.path.abspath(args.directory)
+    progress_panel.SetSizer(progress_sizer)
+
+    # subsection for Table 1
+
+    # subsection for Table 2 graph
+
+    # section for buttons
+    button_panel = wx.Panel(self, style=wx.SUNKEN_BORDER)
+    button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    self.scale = (24,24)
+
+    # Next/Previous buttons
+    self.prev_button = wx.BitmapButton(
+      button_panel,bitmap=bitmaps.fetch_icon_bitmap('actions','back'))
+    self.next_button = wx.BitmapButton(
+      button_panel, bitmap=bitmaps.fetch_icon_bitmap('actions','forward'))
+    self.prev_button.Bind(wx.EVT_BUTTON, self.GetPrev)
+    self.next_button.Bind(wx.EVT_BUTTON, self.GetNext)
+
     # timer button
-    self.timer_button = wx.Button(self.main_panel, label='Start')
+    self.timer_button = wx.Button(button_panel, label='Start')
+    self.timer_button.SetBitmap(
+      bitmap=bitmaps.fetch_icon_bitmap('actions','runit', scale=self.scale))
     self.timer_button.Bind(wx.EVT_BUTTON, self.OnToggleTimer)
-    main_sizer.Add(self.timer_button, 0,
-                   wx.ALL|wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM, 5)
+
+    button_sizer.Add(self.prev_button, 0, wx.ALL, 1)
+    button_sizer.Add(self.next_button, 0, wx.ALL, 1)
+    button_sizer.AddStretchSpacer()
+    button_sizer.Add(self.timer_button, 0, wx.ALL, 5)
+    button_panel.SetSizer(button_sizer)
 
     # draw
-    self.main_panel.SetSizer(main_sizer)
+    main_sizer.Add(progress_panel, 1, wx.ALL|wx.EXPAND, 5)
+    main_sizer.Add(button_panel, 0, wx.ALL|wx.EXPAND, 5)
+    self.SetSizerAndFit(main_sizer)
+    self.SetMinSize(size)
 
   # ---------------------------------------------------------------------------
   # Event functions
   def OnToggleTimer(self, event=None):
     '''
     Start/Stop monitoring directory
+    Next/Prev buttons only work if timer is off
     '''
+    # stop monitoring
     if (self.timer.IsRunning()):
       self.timer.Stop()
       self.timer_button.SetLabel('Start')
+      self.timer_button.SetBitmap(
+        bitmap=bitmaps.fetch_icon_bitmap('actions','runit', scale=self.scale))
+      self.prev_button.Enable(True)
+      self.next_button.Enable(True)
+    # start monitoring
     else:
       self.timer.Start(self.interval)
       self.timer_button.SetLabel('Stop')
+      self.timer_button.SetBitmap(
+        bitmap=bitmaps.fetch_icon_bitmap('actions','stop', scale=self.scale))
+      self.prev_button.Enable(False)
+      self.next_button.Enable(False)
 
   def UpdateView(self, event=None):
     '''
     Update map and model in Coot, and update statistics
+    '''
+    pass
+
+  def GetPrev(self, event=None):
+    '''
+    Update to previous set of files
+    '''
+    pass
+
+  def GetNext(self, event=None):
+    '''
+    Update to next set of files
     '''
     pass
 
