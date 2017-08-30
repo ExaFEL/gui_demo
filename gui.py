@@ -12,6 +12,7 @@ class file_manager(object):
   '''
   def __init__(self, directory):
     self.directory = directory
+    assert (os.path.isdir(self.directory))
     self.file_extensions = ['json', 'pdb', 'mtz']
     self.unique_prefixes = list()
     self.unique_times = list()
@@ -41,33 +42,65 @@ class file_manager(object):
         self.unique_prefixes.append(new_prefixes[i][0])
         self.unique_times.append(new_prefixes[i][1])
 
-  def get_current(self):
-    return self.unique_prefixes[self.current_index]
+  def at_latest(self):
+    '''
+    Determine if current position is at the most recent file
+    '''
+    if (self.current_index == (len(self.unique_prefixes) - 1)):
+      return True
+    return False
 
-  def get_latest(self):
+  def at_start(self):
+    '''
+    Determin if current position is at the first file
+    '''
+    return (self.current_index == 0)
+
+  def get_current(self, full_path=False):
+    '''
+    Return the file at the current position
+    '''
+    path = self.unique_prefixes[self.current_index]
+    if (full_path):
+      path = os.path.join(self.directory, path)
+    return path
+
+  def get_latest(self, full_path=False):
+    '''
+    Return the most recent file and update current position
+    None is returned if the current position is already at the end
+    '''
     last_index = len(self.unique_prefixes) - 1
     if (self.current_index == last_index):
       return None
     else:
       self.current_index = last_index
       if (self.current_index > -1):
-        return self.get_current()
+        return self.get_current(full_path)
       else:
         self.current_index = 0
         return None
 
-  def get_previous(self):
+  def get_previous(self, full_path=False):
+    '''
+    Return the previous file and update current position
+    None is returned if the current position is at the start
+    '''
     self.current_index -= 1
     if (self.current_index > -1):
-      return self.get_current()
+      return self.get_current(full_path)
     else:
       self.current_index = 0
       return None
 
-  def get_next(self):
+  def get_next(self, full_path=False):
+    '''
+    Return the next file and update current position
+    None is returned if the current position is at the end
+    '''
     self.current_index += 1
     if (self.current_index < len(self.unique_prefixes)):
-      return self.get_current()
+      return self.get_current(full_path)
     else:
       self.current_index = len(self.unique_prefixes) - 1
       return None
@@ -138,6 +171,14 @@ class MonitorFrame(wx.Frame):
     if (prefix is not None):
       print prefix
 
+  def check_next_prev_buttons(self):
+    self.prev_button.Enable(True)
+    self.next_button.Enable(True)
+    if (self.files.at_start()):
+      self.prev_button.Enable(False)
+    elif (self.files.at_latest()):
+      self.next_button.Enable(False)
+
   # ---------------------------------------------------------------------------
   # Event functions
   def OnToggleAuto(self, event=None):
@@ -150,8 +191,7 @@ class MonitorFrame(wx.Frame):
       self.auto_button.SetLabel('Start')
       self.auto_button.SetBitmap(
         bitmap=bitmaps.fetch_icon_bitmap('actions','runit', scale=self.scale))
-      self.prev_button.Enable(True)
-      self.next_button.Enable(True)
+      self.check_next_prev_buttons()
       self.auto_update = False
     # start monitoring
     else:
@@ -168,21 +208,23 @@ class MonitorFrame(wx.Frame):
     '''
     self.files.update_unique_files()
     if (self.auto_update):
-      prefix = self.files.get_latest()
+      prefix = self.files.get_latest(full_path=True)
       self.update_view(prefix)
 
   def GetPrev(self, event=None):
     '''
     Update to previous set of files
     '''
-    prefix = self.files.get_previous()
+    prefix = self.files.get_previous(full_path=True)
+    self.check_next_prev_buttons()
     self.update_view(prefix)
 
   def GetNext(self, event=None):
     '''
     Update to next set of files
     '''
-    prefix = self.files.get_next()
+    prefix = self.files.get_next(full_path=True)
+    self.check_next_prev_buttons()
     self.update_view(prefix)
 
 # =============================================================================
