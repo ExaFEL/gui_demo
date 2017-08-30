@@ -5,6 +5,70 @@ import wx
 from wxtbx import bitmaps
 
 # =============================================================================
+class file_manager(object):
+  '''
+  Keeps track of files in a directory
+  The file prefix is returned to create the model, map, and JSON files
+  '''
+  def __init__(self, directory):
+    self.directory = directory
+    self.file_extensions = ['json', 'pdb', 'mtz']
+    self.unique_prefixes = list()
+    self.unique_times = list()
+    self.current_index = 0
+
+  def update_unique_files(self):
+    '''
+    check all files and keep those that have all 3 types with the same prefix
+    add new files to be tracked, sorted by modification time
+    '''
+    all_files = os.listdir(self.directory)
+    new_prefixes = list()
+    for filename in all_files:
+      prefix, ext = os.path.splitext(filename)
+      if ( (prefix not in self.unique_prefixes) and
+           (prefix not in [p[0] for p in new_prefixes]) ):
+        complete = True
+        for ext in self.file_extensions:
+          complete = complete and os.path.isfile(prefix + '.' + ext)
+        if (complete):
+          test_filename = prefix + '.' + self.file_extensions[0]
+          test_filename = os.path.join(self.directory, test_filename)
+          new_prefixes.append((prefix, os.path.getmtime(test_filename)))
+    if (len(new_prefixes) > 0):
+      new_prefixes.sort(key=lambda x: x[1])
+      for i in xrange(len(new_prefixes)):
+        self.unique_prefixes.append(new_prefixes[i][0])
+        self.unique_times.append(new_prefixes[i][1])
+
+  def get_current(self):
+    return self.unique_prefixes[self.current_index]
+
+  def get_latest(self):
+    self.current_index = len(self.unique_prefixes) - 1
+    if (self.current_index > -1):
+      return self.get_current()
+    else:
+      self.current_index = 0
+      return None
+
+  def get_previous(self):
+    self.current_index -= 1
+    if (self.current_index > -1):
+      return self.get_current()
+    else:
+      self.current_index = 0
+      return None
+
+  def get_next(self):
+    self.current_index += 1
+    if (self.current_index < len(self.unique_prefixes)):
+      return self.get_current()
+    else:
+      self.current_index = len(self.unique_prefixes) - 1
+      return None
+
+# =============================================================================
 class MonitorFrame(wx.Frame):
   '''
   Main window for GUI
@@ -12,18 +76,21 @@ class MonitorFrame(wx.Frame):
   def __init__(self, parent, args):
     size = (args.width, args.height)
     wx.Frame.__init__(self, parent, title='Status Monitor', size=size)
-    # self.main_panel = wx.Panel(self)
     main_sizer = wx.BoxSizer(wx.VERTICAL)
 
     # timer
     self.interval = args.interval * 1000  # interval in milliseconds
     self.timer = wx.Timer(self)
+    self.timer.Start(self.interval)
     self.Bind(wx.EVT_TIMER, self.UpdateView, self.timer)
+    self.auto_update = True
 
     # section for progress
     progress_panel = wx.Panel(self, style=wx.SUNKEN_BORDER)
     progress_sizer = wx.BoxSizer(wx.HORIZONTAL)
-    self.directory = os.path.abspath(args.directory)
+    self.files = file_manager(os.path.abspath(args.directory))
+    self.files.update_unique_files()
+
     progress_panel.SetSizer(progress_sizer)
 
     # subsection for Table 1
@@ -42,17 +109,19 @@ class MonitorFrame(wx.Frame):
       button_panel, bitmap=bitmaps.fetch_icon_bitmap('actions','forward'))
     self.prev_button.Bind(wx.EVT_BUTTON, self.GetPrev)
     self.next_button.Bind(wx.EVT_BUTTON, self.GetNext)
+    self.prev_button.Enable(False)
+    self.next_button.Enable(False)
 
     # timer button
-    self.timer_button = wx.Button(button_panel, label='Start')
-    self.timer_button.SetBitmap(
-      bitmap=bitmaps.fetch_icon_bitmap('actions','runit', scale=self.scale))
-    self.timer_button.Bind(wx.EVT_BUTTON, self.OnToggleTimer)
+    self.auto_button = wx.Button(button_panel, label='Stop')
+    self.auto_button.SetBitmap(
+      bitmap=bitmaps.fetch_icon_bitmap('actions','stop', scale=self.scale))
+    self.auto_button.Bind(wx.EVT_BUTTON, self.OnToggleAuto)
 
     button_sizer.Add(self.prev_button, 0, wx.ALL, 1)
     button_sizer.Add(self.next_button, 0, wx.ALL, 1)
     button_sizer.AddStretchSpacer()
-    button_sizer.Add(self.timer_button, 0, wx.ALL, 5)
+    button_sizer.Add(self.auto_button, 0, wx.ALL, 5)
     button_panel.SetSizer(button_sizer)
 
     # draw
@@ -61,47 +130,56 @@ class MonitorFrame(wx.Frame):
     self.SetSizerAndFit(main_sizer)
     self.SetMinSize(size)
 
+  def update_view(self, prefix):
+    print prefix
+
   # ---------------------------------------------------------------------------
   # Event functions
-  def OnToggleTimer(self, event=None):
+  def OnToggleAuto(self, event=None):
     '''
-    Start/Stop monitoring directory
-    Next/Prev buttons only work if timer is off
+    Start/Stop automatic updating
+    Next/Prev buttons only work if autoupdate is off
     '''
     # stop monitoring
-    if (self.timer.IsRunning()):
-      self.timer.Stop()
-      self.timer_button.SetLabel('Start')
-      self.timer_button.SetBitmap(
+    if (self.auto_update):
+      self.auto_button.SetLabel('Start')
+      self.auto_button.SetBitmap(
         bitmap=bitmaps.fetch_icon_bitmap('actions','runit', scale=self.scale))
       self.prev_button.Enable(True)
       self.next_button.Enable(True)
+      self.auto_update = False
     # start monitoring
     else:
-      self.timer.Start(self.interval)
-      self.timer_button.SetLabel('Stop')
-      self.timer_button.SetBitmap(
+      self.auto_button.SetLabel('Stop')
+      self.auto_button.SetBitmap(
         bitmap=bitmaps.fetch_icon_bitmap('actions','stop', scale=self.scale))
       self.prev_button.Enable(False)
       self.next_button.Enable(False)
+      self.auto_update = True
 
   def UpdateView(self, event=None):
     '''
-    Update map and model in Coot, and update statistics
+    Update tracked files and view if set to automatically update
     '''
-    pass
+    self.files.update_unique_files()
+    if (self.auto_update):
+      prefix = self.files.get_latest()
+      if (prefix is not None):
+        self.update_view(prefix)
 
   def GetPrev(self, event=None):
     '''
     Update to previous set of files
     '''
-    pass
+    prefix = self.files.get_previous()
+    self.update_view(prefix)
 
   def GetNext(self, event=None):
     '''
     Update to next set of files
     '''
-    pass
+    prefix = self.files.get_next()
+    self.update_view(prefix)
 
 # =============================================================================
 if (__name__ == '__main__'):
