@@ -45,12 +45,16 @@ class file_manager(object):
     return self.unique_prefixes[self.current_index]
 
   def get_latest(self):
-    self.current_index = len(self.unique_prefixes) - 1
-    if (self.current_index > -1):
-      return self.get_current()
-    else:
-      self.current_index = 0
+    last_index = len(self.unique_prefixes) - 1
+    if (self.current_index == last_index):
       return None
+    else:
+      self.current_index = last_index
+      if (self.current_index > -1):
+        return self.get_current()
+      else:
+        self.current_index = 0
+        return None
 
   def get_previous(self):
     self.current_index -= 1
@@ -131,7 +135,8 @@ class MonitorFrame(wx.Frame):
     self.SetMinSize(size)
 
   def update_view(self, prefix):
-    print prefix
+    if (prefix is not None):
+      print prefix
 
   # ---------------------------------------------------------------------------
   # Event functions
@@ -164,8 +169,7 @@ class MonitorFrame(wx.Frame):
     self.files.update_unique_files()
     if (self.auto_update):
       prefix = self.files.get_latest()
-      if (prefix is not None):
-        self.update_view(prefix)
+      self.update_view(prefix)
 
   def GetPrev(self, event=None):
     '''
