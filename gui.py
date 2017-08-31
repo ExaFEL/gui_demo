@@ -128,11 +128,31 @@ class MonitorFrame(wx.Frame):
     self.files = file_manager(os.path.abspath(args.directory))
     self.files.update_unique_files()
 
-    progress_panel.SetSizer(progress_sizer)
+    # subsection of file information
+    file_info_sizer = wx.GridSizer(rows=2, cols=2)
+    directory_label = wx.StaticText(progress_panel, label='Directory: ')
+    directory_text = wx.StaticText(
+      progress_panel, label=os.path.abspath(args.directory))
+    bold_font = directory_label.GetFont()
+    bold_font.SetWeight(wx.FONTWEIGHT_BOLD)
+    directory_label.SetFont(bold_font)
+    file_label = wx.StaticText(progress_panel, label='File prefix: ')
+    file_label.SetFont(bold_font)
+    file_text = self.files.get_current()
+    if (file_text is None):
+      file_text = ''
+    self.file_text = wx.StaticText(progress_panel, label=file_text)
+    file_info_sizer.Add(directory_label, 0, wx.ALIGN_RIGHT, 0)
+    file_info_sizer.Add(directory_text, 1, wx.EXPAND|wx.ALIGN_LEFT, 0)
+    file_info_sizer.Add(file_label, 0, wx.ALIGN_RIGHT, 0)
+    file_info_sizer.Add(self.file_text, 1, wx.EXPAND|wx.ALIGN_LEFT, 0)
 
     # subsection for Table 1
 
     # subsection for Table 2 graph
+
+    progress_sizer.Add(file_info_sizer, 0, wx.ALL, 5)
+    progress_panel.SetSizer(progress_sizer)
 
     # section for buttons
     button_panel = wx.Panel(self, style=wx.SUNKEN_BORDER)
@@ -169,6 +189,7 @@ class MonitorFrame(wx.Frame):
 
   def update_view(self, prefix):
     if (prefix is not None):
+      self.file_text.SetLabel(os.path.basename(prefix))
       print prefix
 
   def check_next_prev_buttons(self):
