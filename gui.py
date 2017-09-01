@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import wx
 
@@ -52,7 +53,7 @@ class file_manager(object):
 
   def at_start(self):
     '''
-    Determin if current position is at the first file
+    Determine if current position is at the first file
     '''
     return (self.current_index == 0)
 
@@ -106,6 +107,147 @@ class file_manager(object):
       return None
 
 # =============================================================================
+class TableOneWidgets(object):
+
+  def __init__(self, parent, sizer):
+    '''
+    Container for widgets for Table 1 data
+    '''
+
+    self.parent = parent
+    self.sizer = sizer
+    self.sizer.SetRows(28)
+    self.sizer.SetCols(2)
+
+    self.collection_widgets = dict()     # split widgets because of Resolution
+    self.refinement_widgets = dict()
+
+    # items with multiple values
+    self.unit_cell = dict()
+    self.uc_labels = ('a', 'alpha', 'b', 'beta', 'c', 'gamma')
+    self.no_atoms = dict()
+    self.plw_labels = ('Protein', 'Ligand/ion', 'Water')
+    self.b_factors = dict()
+    self.rms = dict()
+    self.rms_labels = ('Bond lengths', 'Bond angles')
+    self.rama = dict()
+    self.rama_labels = ('Favored', 'Outliers')
+
+    self.sizer.Add(
+      self.set_bold(wx.StaticText(parent, label='Data Collection:')),
+      0, wx.ALIGN_LEFT, 0)
+    self.sizer.AddStretchSpacer()
+
+    # headings from JSON, maybe read from file instead
+    for label in ('Space group', 'Cell dimensions', 'Resolution', 'Rsplit',
+                  'I/sigI', 'Completeness', 'Multiplicity (Stills)',
+                  'No. collected images', 'No. images used',
+                  'No. lattices merged', 'No. total reflections',
+                  'CC1/2', 'CCiso', 'CC*', 'CCano', 'Wilson B factor'):
+      self.add_row(label, self.collection_widgets)
+
+    self.sizer.AddStretchSpacer()
+    self.sizer.AddStretchSpacer()
+
+    self.sizer.Add(
+      self.set_bold(wx.StaticText(parent, label='Refinement:')),
+      0, wx.ALIGN_LEFT, 0)
+    self.sizer.AddStretchSpacer()
+
+    for label in ('Resolution', 'Rwork / Rfree', 'No. atoms',
+                  'B-factors', 'R.m.s deviations', 'Clashscore',
+                  'Ramachandran statistics'):
+      self.add_row(label, self.refinement_widgets)
+
+  def set_bold(self, text_widget):
+    bold_font = text_widget.GetFont()
+    bold_font.SetWeight(wx.FONTWEIGHT_BOLD)
+    text_widget.SetFont(bold_font)
+    return text_widget
+
+  def add_row(self, label, widgets, sizer=None):
+    '''
+    Layout widgets
+    '''
+    if (sizer is None):
+      sizer = self.sizer
+    new_label = label + ': '
+    sizer.Add(
+      self.set_bold(wx.StaticText(self.parent, label=new_label)),
+      0, wx.ALIGN_RIGHT, 0)
+    # special widgets for rows with multiple values
+    if (label == 'Cell dimensions'):
+      new_sizer = wx.FlexGridSizer(rows=3, cols=4)
+      for sublabel in self.uc_labels:
+        self.add_row(sublabel, self.unit_cell, new_sizer)
+      widgets[label] = new_sizer
+    elif (label == 'No. atoms'):
+      new_sizer = wx.FlexGridSizer(rows=3, cols=2)
+      for sublabel in self.plw_labels:
+        self.add_row(sublabel, self.no_atoms, new_sizer)
+      widgets[label] = new_sizer
+    elif (label == 'B-factors'):
+      new_sizer = wx.FlexGridSizer(rows=3, cols=2)
+      for sublabel in self.plw_labels:
+        self.add_row(sublabel, self.b_factors, new_sizer)
+      widgets[label] = new_sizer
+    elif (label == 'R.m.s deviations'):
+      new_sizer = wx.FlexGridSizer(rows=2, cols=2)
+      for sublabel in self.rms_labels:
+        self.add_row(sublabel, self.rms, new_sizer)
+      widgets[label] = new_sizer
+    elif (label == 'Ramachandran statistics'):
+      new_sizer = wx.FlexGridSizer(rows=2, cols=2)
+      for sublabel in self.rama_labels:
+        self.add_row(sublabel, self.rama, new_sizer)
+      widgets[label] = new_sizer
+    else:
+      widgets[label] = wx.StaticText(self.parent, label='N/A')
+    sizer.Add(widgets[label], 0, wx.ALIGN_RIGHT, 0)
+
+  def update_values(self, t1):
+    '''
+    Given a parsed JSON object, t1, update the values in the widget
+    '''
+    t_dc = t1['Data collection']
+    for label in t_dc.keys():
+      t = t_dc[label]
+      if (label == 'Cell dimensions'):
+        for sublabel in self.uc_labels:
+          self.update_widget(sublabel, self.unit_cell, t[sublabel])
+      else:
+        self.update_widget(label, self.collection_widgets, t)
+
+    t_r = t1['Refinement']
+    for label in t_r.keys():
+      t = t_r[label]
+      if (label == 'No. atoms'):
+        for sublabel in self.plw_labels:
+          self.update_widget(sublabel, self.no_atoms, t[sublabel])
+      elif (label == 'B-factors'):
+        for sublabel in self.plw_labels:
+          self.update_widget(sublabel, self.b_factors, t[sublabel])
+      elif (label == 'R.m.s deviations'):
+        for sublabel in self.rms_labels:
+          self.update_widget(sublabel, self.rms, t[sublabel])
+      elif (label == 'Ramachandran statistics'):
+        for sublabel in self.rama_labels:
+          self.update_widget(sublabel, self.rama, t[sublabel])
+      else:
+        self.update_widget(label, self.refinement_widgets, t)
+
+  def update_widget(self, label, widgets, text):
+    '''
+    Change the text of an individual widget
+    '''
+    if ( not (isinstance(text, unicode) or isinstance(text, str)) ):
+      try:
+        text = unicode(text)
+      except Exception:
+        text = 'N/A'
+    widgets[label].SetLabel(text)
+
+# =============================================================================
 class MonitorFrame(wx.Frame):
   '''
   Main window for GUI
@@ -124,12 +266,12 @@ class MonitorFrame(wx.Frame):
 
     # section for progress
     progress_panel = wx.Panel(self, style=wx.SUNKEN_BORDER)
-    progress_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    progress_sizer = wx.BoxSizer(wx.VERTICAL)
     self.files = file_manager(os.path.abspath(args.directory))
     self.files.update_unique_files()
 
     # subsection of file information
-    file_info_sizer = wx.GridSizer(rows=2, cols=2)
+    file_info_sizer = wx.FlexGridSizer(rows=2, cols=2)
     directory_label = wx.StaticText(progress_panel, label='Directory: ')
     directory_text = wx.StaticText(
       progress_panel, label=os.path.abspath(args.directory))
@@ -143,15 +285,32 @@ class MonitorFrame(wx.Frame):
       file_text = ''
     self.file_text = wx.StaticText(progress_panel, label=file_text)
     file_info_sizer.Add(directory_label, 0, wx.ALIGN_RIGHT, 0)
-    file_info_sizer.Add(directory_text, 1, wx.EXPAND|wx.ALIGN_LEFT, 0)
+    file_info_sizer.Add(directory_text, 0, wx.EXPAND|wx.ALIGN_LEFT, 0)
     file_info_sizer.Add(file_label, 0, wx.ALIGN_RIGHT, 0)
-    file_info_sizer.Add(self.file_text, 1, wx.EXPAND|wx.ALIGN_LEFT, 0)
+    file_info_sizer.Add(self.file_text, 0, wx.EXPAND|wx.ALIGN_LEFT, 0)
 
     # subsection for Table 1
+    data_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    t1_sizer = wx.FlexGridSizer()
+    self.t1 = TableOneWidgets(progress_panel, t1_sizer)
 
     # subsection for Table 2 graph
+    t2_sizer = wx.FlexGridSizer(rows=28, cols=2)
+    self.t2 = TableOneWidgets(progress_panel, t2_sizer)
 
-    progress_sizer.Add(file_info_sizer, 0, wx.ALL, 5)
+    data_sizer.Add(t1_sizer, 0, wx.ALL, 5)
+    data_sizer.Add(
+      wx.StaticLine(progress_panel, size=(20, 20), style=wx.LI_VERTICAL),
+      0, wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.EXPAND, 25)
+    data_sizer.Add(t2_sizer, 1, wx.EXPAND|wx.ALL, 0)
+
+    # layout data panel
+    progress_sizer.Add(file_info_sizer, 0, wx.ALL|wx.EXPAND, 5)
+    progress_sizer.Add(
+      wx.StaticLine(progress_panel, size=(args.width-50, 4),
+                    style=wx.LI_HORIZONTAL),
+      0, wx.LEFT|wx.RIGHT|wx.EXPAND, 25)
+    progress_sizer.Add(data_sizer, 1, wx.ALL|wx.EXPAND, 5)
     progress_panel.SetSizer(progress_sizer)
 
     # section for buttons
@@ -169,19 +328,20 @@ class MonitorFrame(wx.Frame):
     self.prev_button.Enable(False)
     self.next_button.Enable(False)
 
-    # timer button
+    # toggle autoupdate button
     self.auto_button = wx.Button(button_panel, label='Stop')
     self.auto_button.SetBitmap(
       bitmap=bitmaps.fetch_icon_bitmap('actions','stop', scale=self.scale))
     self.auto_button.Bind(wx.EVT_BUTTON, self.OnToggleAuto)
 
+    # layout buttons
     button_sizer.Add(self.prev_button, 0, wx.ALL, 1)
     button_sizer.Add(self.next_button, 0, wx.ALL, 1)
     button_sizer.AddStretchSpacer()
     button_sizer.Add(self.auto_button, 0, wx.ALL, 5)
     button_panel.SetSizer(button_sizer)
 
-    # draw
+    # layout main frame
     main_sizer.Add(progress_panel, 1, wx.ALL|wx.EXPAND, 5)
     main_sizer.Add(button_panel, 0, wx.ALL|wx.EXPAND, 5)
     self.SetSizerAndFit(main_sizer)
@@ -190,7 +350,11 @@ class MonitorFrame(wx.Frame):
   def update_view(self, prefix):
     if (prefix is not None):
       self.file_text.SetLabel(os.path.basename(prefix))
-      print prefix
+      f = open(prefix + '.json', 'r')
+      table = json.load(f)
+      f.close()
+      self.t1.update_values(table['Table 1'])
+      self.Layout()
 
   def check_next_prev_buttons(self):
     self.prev_button.Enable(True)
