@@ -32,7 +32,8 @@ class file_manager(object):
            (prefix not in [p[0] for p in new_prefixes]) ):
         complete = True
         for ext in self.file_extensions:
-          complete = complete and os.path.isfile(prefix + '.' + ext)
+          complete = complete and os.path.isfile(
+            os.path.join(self.directory, prefix + '.' + ext))
         if (complete):
           test_filename = prefix + '.' + self.file_extensions[0]
           test_filename = os.path.join(self.directory, test_filename)
@@ -61,9 +62,11 @@ class file_manager(object):
     '''
     Return the file at the current position
     '''
-    path = self.unique_prefixes[self.current_index]
-    if (full_path):
-      path = os.path.join(self.directory, path)
+    path = None
+    if (len(self.unique_prefixes) > 0):
+      path = self.unique_prefixes[self.current_index]
+      if (full_path):
+        path = os.path.join(self.directory, path)
     return path
 
   def get_latest(self, full_path=False):
