@@ -12,11 +12,22 @@
 
   ## cctbx
   python bootstrap.py hot update --builder=xfel --cciuser=\<username\> --sfuser=\<username\> <br />
-  python bootstrap.py build --builder=xfel --with-python=`which python` --nproc=32 <br />
+  python bootstrap.py build --builder=xfel --with-python=\`which python\` --nproc=32 <br />
   cd build; make
+
+  ## Coot
+  wget 'https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/binaries/release/coot-0.8.7-binary-Linux-x86_64-openSUSE-12.3-python-gtk2.tar.gz' <br />
+  tar -xf coot-0.8.7-binary-Linux-x86_64-openSUSE-12.3-python-gtk2.tar.gz <br />
+  wget 'https://ftp-osl.osuosl.org/pub/libpng/src/libpng15/libpng-1.5.29.tar.xz' <br />
+  tar -xf libpng-1.5.29.tar.xz <br />
+  cd libpng-1.5.29 <br />
+  ./configure --prefix=\<Coot directory\> <br />
+  module load zlib <br />
+  make; make install <br />
 
 # Running
   module load python <br />
   source activate gui_demo <br />
   source \<cctbx installation>/build/setpaths_all.sh <br />
+  export COOT_PREFIX=\<Coot directory\>
   python gui.py

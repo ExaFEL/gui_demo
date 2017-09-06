@@ -3,6 +3,8 @@ import json
 import os
 import wx
 
+import libtbx.load_env
+from libtbx import xmlrpc_utils
 from wxtbx import bitmaps
 
 # =============================================================================
@@ -350,6 +352,15 @@ class MonitorFrame(wx.Frame):
     self.SetSizerAndFit(main_sizer)
     self.SetMinSize(size)
 
+    # start Coot
+    coot_path = os.environ.get('COOT_PREFIX','')
+    coot_cmd = 'bin/coot --no-guano --script %s' %\
+               os.path.join(libtbx.env.build_path.sh_value(),
+                            '../modules/gui_demo/Coot.py')
+    coot_cmd = [os.path.join(coot_path, coot_cmd)]
+    self.coot = xmlrpc_utils.external_program_server(
+      command_args=coot_cmd, program_id='Coot', timeout=250)
+
   def update_view(self, prefix):
     if (prefix is not None):
       self.file_text.SetLabel(os.path.basename(prefix))
@@ -358,6 +369,13 @@ class MonitorFrame(wx.Frame):
       f.close()
       self.t1.update_values(table['Table 1'])
       self.Layout()
+
+      model_file = prefix + '.pdb'
+      mtz_file = prefix + '.mtz'
+      if (self.coot.is_alive()):
+        self.coot.update_model(model_file)
+        self.coot.close_maps()
+        self.coot.auto_load_maps(mtz_file)
 
   def check_next_prev_buttons(self):
     self.prev_button.Enable(True)
