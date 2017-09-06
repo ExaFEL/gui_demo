@@ -19,15 +19,15 @@
   wget 'https://www2.mrc-lmb.cam.ac.uk/personal/pemsley/coot/binaries/release/coot-0.8.7-binary-Linux-x86_64-openSUSE-12.3-python-gtk2.tar.gz' <br />
   tar -xf coot-0.8.7-binary-Linux-x86_64-openSUSE-12.3-python-gtk2.tar.gz <br />
   wget 'https://ftp-osl.osuosl.org/pub/libpng/src/libpng15/libpng-1.5.29.tar.xz' <br />
+  module load zlib <br />
   tar -xf libpng-1.5.29.tar.xz <br />
   cd libpng-1.5.29 <br />
   ./configure --prefix=\<Coot directory\> <br />
-  module load zlib <br />
   make; make install <br />
 
 # Running
   module load python <br />
   source activate gui_demo <br />
   source \<cctbx installation>/build/setpaths_all.sh <br />
-  export COOT_PREFIX=\<Coot directory\>
+  export COOT_PREFIX=\<Coot directory\> <br />
   python gui.py
