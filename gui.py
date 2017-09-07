@@ -407,6 +407,8 @@ class MonitorFrame(wx.Frame):
       self.prev_button.Enable(False)
       self.next_button.Enable(False)
       self.auto_update = True
+      prefix = self.files.get_latest(full_path=True)
+      self.update_view(prefix)
 
   def UpdateView(self, event=None):
     '''
