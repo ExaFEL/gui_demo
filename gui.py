@@ -3,6 +3,11 @@ import json
 import os
 import wx
 
+import matplotlib
+matplotlib.use('WXAgg')
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
+
 import libtbx.load_env
 from libtbx import xmlrpc_utils
 from wxtbx import bitmaps
@@ -113,14 +118,13 @@ class file_manager(object):
 
 # =============================================================================
 class TableOneWidgets(object):
-
-  def __init__(self, parent, sizer):
-    '''
-    Container for widgets for Table 1 data
-    '''
+  '''
+  Container for widgets for Table 1 data
+  '''
+  def __init__(self, parent):
 
     self.parent = parent
-    self.sizer = sizer
+    self.sizer = wx.FlexGridSizer()
     self.sizer.SetRows(28)
     self.sizer.SetCols(2)
 
@@ -253,6 +257,35 @@ class TableOneWidgets(object):
     widgets[label].SetLabel(text)
 
 # =============================================================================
+class TableTwoWidgets(object):
+  '''
+  Container for widgets for Table 2 data
+  '''
+  def __init__(self, parent):
+
+    self.parent = parent
+    self.sizer = wx.BoxSizer(wx.VERTICAL)
+
+    self.graph = Figure((1.0, 1.0), dpi=100, tight_layout=True)
+    self.canvas = FigureCanvasWxAgg(parent, -1, self.graph)
+
+    self.r_plot = self.graph.add_subplot(111)
+
+    x = [1, 2, 3, 4]
+    y = [2, 4, 6, 8]
+
+    self.r_plot.plot(x,y)
+
+    self.sizer.Add(self.canvas, 1, wx.ALL|wx.EXPAND, 5)
+
+  def update_values(self, t2):
+    '''
+    Given a parsed JSON object, t2, update the values in the graphs
+    '''
+
+    self.canvas.draw()
+
+# =============================================================================
 class MonitorFrame(wx.Frame):
   '''
   Main window for GUI
@@ -261,6 +294,7 @@ class MonitorFrame(wx.Frame):
     size = (args.width, args.height)
     wx.Frame.__init__(self, parent, title='Status Monitor', size=size)
     main_sizer = wx.BoxSizer(wx.VERTICAL)
+    self.Bind(wx.EVT_CLOSE, self.OnClose)
 
     # timer
     self.interval = args.interval * 1000  # interval in milliseconds
@@ -296,18 +330,16 @@ class MonitorFrame(wx.Frame):
 
     # subsection for Table 1
     data_sizer = wx.BoxSizer(wx.HORIZONTAL)
-    t1_sizer = wx.FlexGridSizer()
-    self.t1 = TableOneWidgets(progress_panel, t1_sizer)
+    self.t1 = TableOneWidgets(progress_panel)
 
     # subsection for Table 2 graph
-    t2_sizer = wx.FlexGridSizer(rows=28, cols=2)
-    self.t2 = TableOneWidgets(progress_panel, t2_sizer)
+    self.t2 = TableTwoWidgets(progress_panel)
 
-    data_sizer.Add(t1_sizer, 0, wx.ALL, 5)
+    data_sizer.Add(self.t1.sizer, 0, wx.ALL, 5)
     data_sizer.Add(
       wx.StaticLine(progress_panel, size=(20, 20), style=wx.LI_VERTICAL),
       0, wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.EXPAND, 25)
-    data_sizer.Add(t2_sizer, 1, wx.EXPAND|wx.ALL, 0)
+    data_sizer.Add(self.t2.sizer, 1, wx.EXPAND|wx.ALL, 0)
 
     # layout data panel
     progress_sizer.Add(file_info_sizer, 0, wx.ALL|wx.EXPAND, 5)
@@ -368,6 +400,7 @@ class MonitorFrame(wx.Frame):
       table = json.load(f)
       f.close()
       self.t1.update_values(table['Table 1'])
+      self.t2.update_values(table['Table 2'])
       self.Layout()
 
       model_file = prefix + '.pdb'
@@ -434,6 +467,11 @@ class MonitorFrame(wx.Frame):
     prefix = self.files.get_next(full_path=True)
     self.check_next_prev_buttons()
     self.update_view(prefix)
+
+  def OnClose(self, event=None):
+    if (self.coot.is_alive()):
+      self.coot.quit()
+    self.Destroy()
 
 # =============================================================================
 if (__name__ == '__main__'):
