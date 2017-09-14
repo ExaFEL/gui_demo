@@ -5,6 +5,10 @@ import wx
 
 import matplotlib
 matplotlib.use('WXAgg')
+matplotlib.rcParams['xtick.labelsize'] = 'x-small'
+matplotlib.rcParams['ytick.labelsize'] = 'x-small'
+matplotlib.rcParams['axes.labelsize'] = 'small'
+matplotlib.rcParams['legend.fontsize'] = 'small'
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 
@@ -269,12 +273,15 @@ class TableTwoWidgets(object):
     self.graph = Figure((1.0, 1.0), dpi=100, tight_layout=True)
     self.canvas = FigureCanvasWxAgg(parent, -1, self.graph)
 
-    self.r_plot = self.graph.add_subplot(111)
+    self.b_plot = self.graph.add_subplot(211)
+    self.b_plot.plot([0, 1], [0, 1])
+    self.b_plot.get_xaxis().set_visible(False)
 
-    x = [1, 2, 3, 4]
-    y = [2, 4, 6, 8]
-
-    self.r_plot.plot(x,y)
+    self.cc_plot = self.graph.add_subplot(212)
+    self.cc_plot.plot([0,1 ], [0, 1])
+    self.cc_plot.set_xlabel('Resolution Range')
+    self.cc_plot.invert_xaxis()
+    self.range_labels = None
 
     self.sizer.Add(self.canvas, 1, wx.ALL|wx.EXPAND, 5)
 
@@ -283,7 +290,57 @@ class TableTwoWidgets(object):
     Given a parsed JSON object, t2, update the values in the graphs
     '''
 
+    # get x-values
+    x = t2['Resolution High']
+    for i in xrange(len(x)):
+      x[i] = float(x[i])
+
+    x_plot, cc_half_plot = self.convert_values(x, t2['CC1/2'])
+    self.cc_plot.plot(x_plot, cc_half_plot, label='CC1/2')
+    x_plot, cc_iso_plot = self.convert_values(x, t2['CCiso'])
+    self.cc_plot.plot(x_plot, cc_iso_plot, label='CCiso')
+
+    self.cc_plot.legend()
+
+    # create labels for resolution range
+    if (self.range_labels is None):
+      x_low = t2['Resolution Low']
+      n = min(len(x), len(x_low))
+      self.range_labels = ['' for i in xrange(n)]
+      for i in xrange(n):
+        try:
+          x_low_f = float(x_low[i])
+          x_low[i] = str(round(x_low_f, 1))
+        except Exception:
+          pass
+        self.range_labels[i] = x_low[i] + ' - ' + str(round(x[i], 1))
+      self.cc_plot.set_xticks(x[:n])
+      self.cc_plot.set_xticklabels(self.range_labels, rotation=35)
+      self.cc_plot.set_xlim((x[0], x[-1]))
+
     self.canvas.draw()
+
+  def convert_values(self, x, y):
+    '''
+    Given the values from Table 2, return a list of x and a list of y for
+    plotting
+    '''
+    x_plot = list()
+    y_plot = list()
+    n = min(len(x), len(y))
+    for i in xrange(n):
+      if ( isinstance(y[i], str) or isinstance(y[i], unicode) ):
+        try:
+          y_new = float(y[i])
+          y[i] = y_new
+          x_plot.append(x[i])
+          y_plot.append(y[i])
+        except Exception:
+          continue
+      else:
+        x_plot.append(x[i])
+        y_plot.append(y[i])
+    return x_plot, y_plot
 
 # =============================================================================
 class MonitorFrame(wx.Frame):
