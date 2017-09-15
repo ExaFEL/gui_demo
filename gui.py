@@ -279,7 +279,7 @@ class TableTwoWidgets(object):
 
     self.cc_plot = self.graph.add_subplot(212)
     self.cc_plot.plot([0,1 ], [0, 1])
-    self.cc_plot.set_xlabel('Resolution Range')
+    self.cc_plot.set_xlabel('Resolution Range ($\AA$)')
     self.cc_plot.invert_xaxis()
     self.range_labels = None
 
@@ -294,32 +294,37 @@ class TableTwoWidgets(object):
     self.cc_plot.clear()
     self.cc_plot = self.graph.add_subplot(212)
 
-    # get x-values
-    x = t2['Resolution High']
-    for i in xrange(len(x)):
-      x[i] = float(x[i])
-
     # create labels for resolution range
+    x_high = t2['Resolution High']
     x_low = t2['Resolution Low']
-    n = min(len(x), len(x_low))
+    n = min(len(x_high), len(x_low))
+    x = range(n)     # equally spaced x values
     self.range_labels = ['' for i in xrange(n)]
+    label_format = '%.2f'
     for i in xrange(n):
       try:
         x_low_f = float(x_low[i])
-        x_low[i] = str(round(x_low_f, 1))
+        x_low[i] = label_format % (round(x_low_f, 2))
       except Exception:
         pass
-      self.range_labels[i] = x_low[i] + ' - ' + str(round(x[i], 1))
+      try:
+        x_high_f = float(x_high[i])
+        x_high[i] = label_format % (round(x_high_f, 2))
+      except Exception:
+        pass
+      self.range_labels[i] = x_low[i] + ' - ' + x_high[i]
     self.cc_plot.set_xticks(x[:n])
     self.cc_plot.set_xticklabels(self.range_labels, rotation=35)
     self.cc_plot.set_xlim((x[0], x[-1]))
-    self.cc_plot.set_xlabel('Resolution Range')
+    self.cc_plot.set_xlabel(r'Resolution Range ($\AA$)')
 
     # update plots
     x_plot, cc_half_plot = self.convert_values(x, t2['CC1/2'])
-    self.cc_plot.plot(x_plot, cc_half_plot, label='CC1/2')
+    self.cc_plot.plot(x_plot, cc_half_plot, label=r'CC$_{1/2}$')
     x_plot, cc_iso_plot = self.convert_values(x, t2['CCiso'])
-    self.cc_plot.plot(x_plot, cc_iso_plot, label='CCiso')
+    self.cc_plot.plot(x_plot, cc_iso_plot, label=r'CC$_{iso}$')
+    # xplot, rsplit_plot = self.convert_values(x, t2['Rsplit'])
+    # self.cc_plot.plot(x_plot, rsplit_plot, label=r'$R_split$')
 
     # create legend
     self.cc_plot.legend()
