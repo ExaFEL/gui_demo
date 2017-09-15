@@ -306,7 +306,6 @@ class TableTwoWidgets(object):
     x_high = t2['Resolution High']
     x_low = t2['Resolution Low']
     if (x_low[0] == 'inf'):
-      print 'hi!'
       x_low[0] = r'$\infty$'
     n = min(len(x_high), len(x_low))
     x = range(n)     # equally spaced x values
@@ -334,8 +333,6 @@ class TableTwoWidgets(object):
     self.middle_plot.tick_params('y', colors='b')
     self.middle_plot_right = self.middle_plot.twinx()
     self.middle_plot_right.get_xaxis().set_visible(False)
-    # self.middle_plot_right.set_xticks(x[:n])
-    # self.middle_plot_right.set_xticklabels(blank_labels, visible=False)
     self.middle_plot_right.set_ylabel('<I/sigI>', color='g')
     self.middle_plot_right.tick_params('y', colors='g')
     self.bottom_plot.set_xticks(x[:n])
