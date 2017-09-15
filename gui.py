@@ -277,10 +277,10 @@ class TableTwoWidgets(object):
     self.b_plot.plot([0, 1], [0, 1])
     self.b_plot.get_xaxis().set_visible(False)
 
-    self.cc_plot = self.graph.add_subplot(212)
-    self.cc_plot.plot([0,1 ], [0, 1])
-    self.cc_plot.set_xlabel('Resolution Range ($\AA$)')
-    self.cc_plot.invert_xaxis()
+    self.bottom_plot = self.graph.add_subplot(212)
+    self.bottom_plot.plot([0,1 ], [0, 1])
+    self.bottom_plot.set_xlabel('Resolution Range ($\AA$)')
+    self.bottom_plot.invert_xaxis()
     self.range_labels = None
 
     self.sizer.Add(self.canvas, 1, wx.ALL|wx.EXPAND, 5)
@@ -291,8 +291,8 @@ class TableTwoWidgets(object):
     '''
 
     # clear old plots
-    self.cc_plot.clear()
-    self.cc_plot = self.graph.add_subplot(212)
+    self.bottom_plot.clear()
+    self.bottom_plot = self.graph.add_subplot(212)
 
     # create labels for resolution range
     x_high = t2['Resolution High']
@@ -313,21 +313,22 @@ class TableTwoWidgets(object):
       except Exception:
         pass
       self.range_labels[i] = x_low[i] + ' - ' + x_high[i]
-    self.cc_plot.set_xticks(x[:n])
-    self.cc_plot.set_xticklabels(self.range_labels, rotation=35)
-    self.cc_plot.set_xlim((x[0], x[-1]))
-    self.cc_plot.set_xlabel(r'Resolution Range ($\AA$)')
+    self.bottom_plot.set_xticks(x[:n])
+    self.bottom_plot.set_xticklabels(self.range_labels, rotation=35)
+    self.bottom_plot.set_xlim((x[0], x[-1]))
+    self.bottom_plot.set_xlabel(r'Resolution Range ($\AA$)')
+    self.bottom_plot.set_ylim((0, 110))
 
     # update plots
-    x_plot, cc_half_plot = self.convert_values(x, t2['CC1/2'])
-    self.cc_plot.plot(x_plot, cc_half_plot, label=r'CC$_{1/2}$')
-    x_plot, cc_iso_plot = self.convert_values(x, t2['CCiso'])
-    self.cc_plot.plot(x_plot, cc_iso_plot, label=r'CC$_{iso}$')
-    # xplot, rsplit_plot = self.convert_values(x, t2['Rsplit'])
-    # self.cc_plot.plot(x_plot, rsplit_plot, label=r'$R_split$')
+    for key, label in [('CC1/2', r'CC$_{1/2}$'),
+                       ('CCiso', r'CC$_{iso}$'),
+                       ('Rsplit',r'R$_{split}$'),
+                       ('Completeness', 'Completeness')]:
+      x_plot, y_plot = self.convert_values(x, t2[key])
+      self.bottom_plot.plot(x_plot, y_plot, label=label)
 
     # create legend
-    self.cc_plot.legend()
+    self.bottom_plot.legend(loc=7)
 
     self.canvas.draw()
 
