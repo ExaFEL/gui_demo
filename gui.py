@@ -329,12 +329,7 @@ class TableTwoWidgets(object):
     self.top_plot.set_yscale('log')
     self.middle_plot.set_xticks(x[:n])
     self.middle_plot.set_xticklabels(blank_labels, visible=False)
-    self.middle_plot.set_ylabel('<Multiplicity>', color='b')
-    self.middle_plot.tick_params('y', colors='b')
-    self.middle_plot_right = self.middle_plot.twinx()
-    self.middle_plot_right.get_xaxis().set_visible(False)
-    self.middle_plot_right.set_ylabel('<I/sigI>', color='g')
-    self.middle_plot_right.tick_params('y', colors='g')
+    self.middle_plot.set_yscale('log')
     self.bottom_plot.set_xticks(x[:n])
     self.bottom_plot.set_xticklabels(range_labels, rotation=35)
     self.bottom_plot.set_xlim((x[0], x[-1]))
@@ -348,10 +343,10 @@ class TableTwoWidgets(object):
       x_plot, y_plot = self.convert_values(x, t2[key])
       self.top_plot.plot(x_plot, y_plot, label=label)
 
-    x_plot, y_plot = self.convert_values(x, t2['<Multiplicity>'])
-    self.middle_plot.plot(x_plot, y_plot, 'b', label='<Multiplicity>')
-    x_plot, y_plot = self.convert_values(x, t2['<I/sigI>'])
-    self.middle_plot_right.plot(x_plot, y_plot, 'g', label='<I/sigI>')
+    for key, label in [('<Multiplicity>', r'$\langle$Multiplicity$\rangle$'),
+                       ('<I/sigI>', r'$\langle$I/sigI$\rangle$')]:
+      x_plot, y_plot = self.convert_values(x, t2[key])
+      self.middle_plot.plot(x_plot, y_plot, label=label)
 
     for key, label in [('Completeness', 'Completeness'),
                        ('CC1/2', r'CC$_{1/2}$'),
@@ -362,6 +357,7 @@ class TableTwoWidgets(object):
 
     # create legends
     self.top_plot.legend()
+    self.middle_plot.legend()
     self.bottom_plot.legend(loc=7)
 
     self.canvas.draw()
