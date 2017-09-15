@@ -286,9 +286,8 @@ class TableTwoWidgets(object):
     self.bottom_plot.plot([0,1 ], [0, 1], 'w')
     self.bottom_plot.set_xlabel('Resolution Range ($\AA$)')
     self.bottom_plot.invert_xaxis()
-    self.range_labels = None
 
-    self.sizer.Add(self.canvas, 1, wx.ALL|wx.EXPAND, 5)
+    self.sizer.Add(self.canvas, 1, wx.ALL|wx.EXPAND, 3)
 
   def update_values(self, t2):
     '''
@@ -306,9 +305,13 @@ class TableTwoWidgets(object):
     # create labels for resolution range
     x_high = t2['Resolution High']
     x_low = t2['Resolution Low']
+    if (x_low[0] == 'inf'):
+      print 'hi!'
+      x_low[0] = r'$\infty$'
     n = min(len(x_high), len(x_low))
     x = range(n)     # equally spaced x values
-    self.range_labels = ['' for i in xrange(n)]
+    range_labels = ['' for i in xrange(n)]
+    blank_labels = ['' for i in xrange(n)]
     label_format = '%.2f'
     for i in xrange(n):
       try:
@@ -321,9 +324,22 @@ class TableTwoWidgets(object):
         x_high[i] = label_format % (round(x_high_f, 2))
       except Exception:
         pass
-      self.range_labels[i] = x_low[i] + ' - ' + x_high[i]
+      range_labels[i] = x_low[i] + ' - ' + x_high[i]
+    self.top_plot.set_xticks(x[:n])
+    self.top_plot.set_xticklabels(blank_labels, visible=False)
+    self.top_plot.set_yscale('log')
+    self.middle_plot.set_xticks(x[:n])
+    self.middle_plot.set_xticklabels(blank_labels, visible=False)
+    self.middle_plot.set_ylabel('<Multiplicity>', color='b')
+    self.middle_plot.tick_params('y', colors='b')
+    self.middle_plot_right = self.middle_plot.twinx()
+    self.middle_plot_right.get_xaxis().set_visible(False)
+    # self.middle_plot_right.set_xticks(x[:n])
+    # self.middle_plot_right.set_xticklabels(blank_labels, visible=False)
+    self.middle_plot_right.set_ylabel('<I/sigI>', color='g')
+    self.middle_plot_right.tick_params('y', colors='g')
     self.bottom_plot.set_xticks(x[:n])
-    self.bottom_plot.set_xticklabels(self.range_labels, rotation=35)
+    self.bottom_plot.set_xticklabels(range_labels, rotation=35)
     self.bottom_plot.set_xlim((x[0], x[-1]))
     self.bottom_plot.set_xlabel(r'Resolution Range ($\AA$)')
     self.bottom_plot.set_ylim((0, 110))
@@ -334,24 +350,16 @@ class TableTwoWidgets(object):
                        ('No. Unique reflections', r'N$_{reflections}$')]:
       x_plot, y_plot = self.convert_values(x, t2[key])
       self.top_plot.plot(x_plot, y_plot, label=label)
-    self.top_plot.set_yscale('log')
-    self.top_plot.set_xticklabels(list(), visible=False)
 
     x_plot, y_plot = self.convert_values(x, t2['<Multiplicity>'])
     self.middle_plot.plot(x_plot, y_plot, 'b', label='<Multiplicity>')
-    self.middle_plot.set_ylabel('<Multiplicity>', color='b')
-    self.middle_plot.tick_params('y', colors='b')
     x_plot, y_plot = self.convert_values(x, t2['<I/sigI>'])
-    self.middle_plot_right = self.middle_plot.twinx()
     self.middle_plot_right.plot(x_plot, y_plot, 'g', label='<I/sigI>')
-    self.middle_plot_right.set_ylabel('<I/sigI>', color='g')
-    self.middle_plot_right.tick_params('y', colors='g')
-    self.middle_plot_right.set_xticklabels(list(), visible=False)
 
-    for key, label in [('CC1/2', r'CC$_{1/2}$'),
+    for key, label in [('Completeness', 'Completeness'),
+                       ('CC1/2', r'CC$_{1/2}$'),
                        ('CCiso', r'CC$_{iso}$'),
-                       ('Rsplit',r'R$_{split}$'),
-                       ('Completeness', 'Completeness')]:
+                       ('Rsplit',r'R$_{split}$')]:
       x_plot, y_plot = self.convert_values(x, t2[key])
       self.bottom_plot.plot(x_plot, y_plot, label=label)
 
@@ -433,19 +441,19 @@ class MonitorFrame(wx.Frame):
     # subsection for Table 2 graph
     self.t2 = TableTwoWidgets(progress_panel)
 
-    data_sizer.Add(self.t1.sizer, 0, wx.ALL, 5)
+    data_sizer.Add(self.t1.sizer, 0, wx.ALL, 3)
     data_sizer.Add(
       wx.StaticLine(progress_panel, size=(20, 20), style=wx.LI_VERTICAL),
       0, wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.EXPAND, 25)
     data_sizer.Add(self.t2.sizer, 1, wx.EXPAND|wx.ALL, 0)
 
     # layout data panel
-    progress_sizer.Add(file_info_sizer, 0, wx.ALL|wx.EXPAND, 5)
+    progress_sizer.Add(file_info_sizer, 0, wx.ALL|wx.EXPAND, 3)
     progress_sizer.Add(
       wx.StaticLine(progress_panel, size=(args.width-50, 4),
                     style=wx.LI_HORIZONTAL),
       0, wx.LEFT|wx.RIGHT|wx.EXPAND, 25)
-    progress_sizer.Add(data_sizer, 1, wx.ALL|wx.EXPAND, 5)
+    progress_sizer.Add(data_sizer, 1, wx.ALL|wx.EXPAND, 3)
     progress_panel.SetSizer(progress_sizer)
 
     # section for buttons
@@ -473,12 +481,12 @@ class MonitorFrame(wx.Frame):
     button_sizer.Add(self.prev_button, 0, wx.ALL, 1)
     button_sizer.Add(self.next_button, 0, wx.ALL, 1)
     button_sizer.AddStretchSpacer()
-    button_sizer.Add(self.auto_button, 0, wx.ALL, 5)
+    button_sizer.Add(self.auto_button, 0, wx.ALL, 3)
     button_panel.SetSizer(button_sizer)
 
     # layout main frame
-    main_sizer.Add(progress_panel, 1, wx.ALL|wx.EXPAND, 5)
-    main_sizer.Add(button_panel, 0, wx.ALL|wx.EXPAND, 5)
+    main_sizer.Add(progress_panel, 1, wx.ALL|wx.EXPAND, 3)
+    main_sizer.Add(button_panel, 0, wx.ALL|wx.EXPAND, 3)
     self.SetSizerAndFit(main_sizer)
     self.SetMinSize(size)
 
