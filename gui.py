@@ -270,15 +270,20 @@ class TableTwoWidgets(object):
     self.parent = parent
     self.sizer = wx.BoxSizer(wx.VERTICAL)
 
-    self.graph = Figure((1.0, 1.0), dpi=100, tight_layout=True)
+    self.graph = Figure((1.0, 1.0), facecolor='white', dpi=100,
+                        tight_layout=True)
     self.canvas = FigureCanvasWxAgg(parent, -1, self.graph)
 
-    self.b_plot = self.graph.add_subplot(211)
-    self.b_plot.plot([0, 1], [0, 1])
-    self.b_plot.get_xaxis().set_visible(False)
+    self.top_plot = self.graph.add_subplot(311)
+    self.top_plot.plot([0, 1], [0, 1], 'w')
+    self.top_plot.set_xticklabels(list(), visible=False)
 
-    self.bottom_plot = self.graph.add_subplot(212)
-    self.bottom_plot.plot([0,1 ], [0, 1])
+    self.middle_plot = self.graph.add_subplot(312)
+    self.middle_plot.plot([0, 1], [0, 1], 'w')
+    self.middle_plot.set_xticklabels(list(), visible=False)
+
+    self.bottom_plot = self.graph.add_subplot(313)
+    self.bottom_plot.plot([0,1 ], [0, 1], 'w')
     self.bottom_plot.set_xlabel('Resolution Range ($\AA$)')
     self.bottom_plot.invert_xaxis()
     self.range_labels = None
@@ -291,8 +296,10 @@ class TableTwoWidgets(object):
     '''
 
     # clear old plots
+    self.middle_plot.clear()
+    self.middle_plot = self.graph.add_subplot(312)
     self.bottom_plot.clear()
-    self.bottom_plot = self.graph.add_subplot(212)
+    self.bottom_plot = self.graph.add_subplot(313)
 
     # create labels for resolution range
     x_high = t2['Resolution High']
@@ -320,6 +327,17 @@ class TableTwoWidgets(object):
     self.bottom_plot.set_ylim((0, 110))
 
     # update plots
+    x_plot, y_plot = self.convert_values(x, t2['<Multiplicity>'])
+    self.middle_plot.plot(x_plot, y_plot, 'b', label='<Multiplicity>')
+    self.middle_plot.set_ylabel('<Multiplicity>', color='b')
+    self.middle_plot.tick_params('y', colors='b')
+    x_plot, y_plot = self.convert_values(x, t2['<I/sigI>'])
+    self.middle_plot_right = self.middle_plot.twinx()
+    self.middle_plot_right.plot(x_plot, y_plot, 'g', label='<I/sigI>')
+    self.middle_plot_right.set_ylabel('<I/sigI>', color='g')
+    self.middle_plot_right.tick_params('y', colors='g')
+    self.middle_plot_right.set_xticklabels(list(), visible=False)
+
     for key, label in [('CC1/2', r'CC$_{1/2}$'),
                        ('CCiso', r'CC$_{iso}$'),
                        ('Rsplit',r'R$_{split}$'),
