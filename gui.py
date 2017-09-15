@@ -290,33 +290,39 @@ class TableTwoWidgets(object):
     Given a parsed JSON object, t2, update the values in the graphs
     '''
 
+    # clear old plots
+    self.cc_plot.clear()
+    self.cc_plot = self.graph.add_subplot(212)
+
     # get x-values
     x = t2['Resolution High']
     for i in xrange(len(x)):
       x[i] = float(x[i])
 
+    # create labels for resolution range
+    x_low = t2['Resolution Low']
+    n = min(len(x), len(x_low))
+    self.range_labels = ['' for i in xrange(n)]
+    for i in xrange(n):
+      try:
+        x_low_f = float(x_low[i])
+        x_low[i] = str(round(x_low_f, 1))
+      except Exception:
+        pass
+      self.range_labels[i] = x_low[i] + ' - ' + str(round(x[i], 1))
+    self.cc_plot.set_xticks(x[:n])
+    self.cc_plot.set_xticklabels(self.range_labels, rotation=35)
+    self.cc_plot.set_xlim((x[0], x[-1]))
+    self.cc_plot.set_xlabel('Resolution Range')
+
+    # update plots
     x_plot, cc_half_plot = self.convert_values(x, t2['CC1/2'])
     self.cc_plot.plot(x_plot, cc_half_plot, label='CC1/2')
     x_plot, cc_iso_plot = self.convert_values(x, t2['CCiso'])
     self.cc_plot.plot(x_plot, cc_iso_plot, label='CCiso')
 
+    # create legend
     self.cc_plot.legend()
-
-    # create labels for resolution range
-    if (self.range_labels is None):
-      x_low = t2['Resolution Low']
-      n = min(len(x), len(x_low))
-      self.range_labels = ['' for i in xrange(n)]
-      for i in xrange(n):
-        try:
-          x_low_f = float(x_low[i])
-          x_low[i] = str(round(x_low_f, 1))
-        except Exception:
-          pass
-        self.range_labels[i] = x_low[i] + ' - ' + str(round(x[i], 1))
-      self.cc_plot.set_xticks(x[:n])
-      self.cc_plot.set_xticklabels(self.range_labels, rotation=35)
-      self.cc_plot.set_xlim((x[0], x[-1]))
 
     self.canvas.draw()
 
