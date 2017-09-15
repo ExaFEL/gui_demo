@@ -296,6 +296,8 @@ class TableTwoWidgets(object):
     '''
 
     # clear old plots
+    self.top_plot.clear()
+    self.top_plot = self.graph.add_subplot(311)
     self.middle_plot.clear()
     self.middle_plot = self.graph.add_subplot(312)
     self.bottom_plot.clear()
@@ -327,6 +329,14 @@ class TableTwoWidgets(object):
     self.bottom_plot.set_ylim((0, 110))
 
     # update plots
+    for key, label in [('No. Measurements', r'N$_{measurements}$'),
+                       ('No. Lattices', r'N$_{lattices}$'),
+                       ('No. Unique reflections', r'N$_{reflections}$')]:
+      x_plot, y_plot = self.convert_values(x, t2[key])
+      self.top_plot.plot(x_plot, y_plot, label=label)
+    self.top_plot.set_yscale('log')
+    self.top_plot.set_xticklabels(list(), visible=False)
+
     x_plot, y_plot = self.convert_values(x, t2['<Multiplicity>'])
     self.middle_plot.plot(x_plot, y_plot, 'b', label='<Multiplicity>')
     self.middle_plot.set_ylabel('<Multiplicity>', color='b')
@@ -345,7 +355,8 @@ class TableTwoWidgets(object):
       x_plot, y_plot = self.convert_values(x, t2[key])
       self.bottom_plot.plot(x_plot, y_plot, label=label)
 
-    # create legend
+    # create legends
+    self.top_plot.legend()
     self.bottom_plot.legend(loc=7)
 
     self.canvas.draw()
