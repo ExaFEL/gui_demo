@@ -28,27 +28,33 @@ class file_manager(object):
     self.file_extensions = ['json', 'pdb', 'mtz']
     self.unique_prefixes = list()
     self.unique_times = list()
-    self.current_index = 0
+    self.current_index = -1
 
   def update_unique_files(self):
     '''
-    check all files and keep those that have all 3 types with the same prefix
+    check all files and keep those that have all 3 types of files that follow
+    <directory>/<tag>/<tag>.json
+    <directory>/<tag>/<tag>_001.pdb
+    <directory>/<tag>/<tag>_001.mtz
     add new files to be tracked, sorted by modification time
     '''
     all_files = os.listdir(self.directory)
     new_prefixes = list()
     for filename in all_files:
-      prefix, ext = os.path.splitext(filename)
-      if ( (prefix not in self.unique_prefixes) and
-           (prefix not in [p[0] for p in new_prefixes]) ):
-        complete = True
-        for ext in self.file_extensions:
-          complete = complete and os.path.isfile(
-            os.path.join(self.directory, prefix + '.' + ext))
-        if (complete):
-          test_filename = prefix + '.' + self.file_extensions[0]
-          test_filename = os.path.join(self.directory, test_filename)
-          new_prefixes.append((prefix, os.path.getmtime(test_filename)))
+      if (os.path.isdir(os.path.join(self.directory, filename))):
+        tag = os.path.basename(filename)
+        if (tag not in self.unique_prefixes):
+          expected_files = [ tag + '.' + self.file_extensions[0],
+                             tag + '_001.' + self.file_extensions[1],
+                             tag + '_001.' + self.file_extensions[2] ]
+          complete = True
+          for i in xrange(len(expected_files)):
+            complete = complete and os.path.isfile(
+              os.path.join(self.directory, tag, expected_files[i]))
+          if (complete):
+            test_filename = tag + '.' + self.file_extensions[0]
+            test_filename = os.path.join(self.directory, tag, test_filename)
+            new_prefixes.append((tag, os.path.getmtime(test_filename)))
     if (len(new_prefixes) > 0):
       new_prefixes.sort(key=lambda x: x[1])
       for i in xrange(len(new_prefixes)):
@@ -77,7 +83,7 @@ class file_manager(object):
     if (len(self.unique_prefixes) > 0):
       path = self.unique_prefixes[self.current_index]
       if (full_path):
-        path = os.path.join(self.directory, path)
+        path = os.path.join(self.directory, path, path)
     return path
 
   def get_latest(self, full_path=False):
@@ -169,7 +175,7 @@ class TableOneWidgets(object):
 
     for label in ('Resolution', 'Rwork / Rfree', 'No. atoms',
                   'B-factors', 'R.m.s deviations', 'Clashscore',
-                  'Ramachandran statistics'):
+                  'Ramachandran statistics', 'Anomalous peak height'):
       self.add_row(label, self.refinement_widgets)
 
   def set_bold(self, text_widget):
@@ -258,7 +264,8 @@ class TableOneWidgets(object):
         text = unicode(text)
       except Exception:
         text = 'N/A'
-    widgets[label].SetLabel(text)
+    if (widgets.has_key(label)):
+      widgets[label].SetLabel(text)
 
 # =============================================================================
 class TableTwoWidgets(object):
@@ -416,7 +423,7 @@ class MonitorFrame(wx.Frame):
     bold_font = directory_label.GetFont()
     bold_font.SetWeight(wx.FONTWEIGHT_BOLD)
     directory_label.SetFont(bold_font)
-    file_label = wx.StaticText(progress_panel, label='File prefix: ')
+    file_label = wx.StaticText(progress_panel, label='Tag: ')
     file_label.SetFont(bold_font)
     file_text = self.files.get_current()
     if (file_text is None):
@@ -502,8 +509,8 @@ class MonitorFrame(wx.Frame):
       self.t2.update_values(table['Table 2'])
       self.Layout()
 
-      model_file = prefix + '.pdb'
-      mtz_file = prefix + '.mtz'
+      model_file = prefix + '_001.pdb'
+      mtz_file = prefix + '_001.mtz'
       if (self.coot.is_alive()):
         self.coot.update_model(model_file)
         self.coot.close_maps()

@@ -17,10 +17,14 @@ source ${CONDA_ROOT}/build/setpaths_all.sh
 export COOT_PREFIX=${SOFTWARE_ROOT}/coot-Linux-x86_64-openSUSE-12.3-gtk2-python
 alias coot='${COOT_PREFIX}/bin/coot --no-guano'
 
-# GUI demo
-alias run_gui='python ${SOFTWARE_ROOT}/gui_demo/gui.py -d ${PWD}'
-
 # merge.sh environment
 export MERGE_ROOT=${PROJECT_DIR}/bkpoon/gui_test/merge_root
-export TAG=r0108_only
 export TARDATA=${PROJECT_DIR}/bkpoon/gui_test/test_data/r0108*.tar
+
+# GUI demo
+alias run_gui='python ${SOFTWARE_ROOT}/gui_demo/gui.py -d ${MERGE_ROOT}'
+alias create_data='\
+for i in `seq 1 3`; do \
+  TAG=${USER}_${i} MULTINODE=True ${CONDA_ROOT}/modules/exafel_project/nks/merge_v02.sh 32;\
+  TAG=${USER}_${i} MULTINODE=False ${CONDA_ROOT}/modules/exafel_project/nks/merge_v02.sh 32;\
+done'
