@@ -514,7 +514,8 @@ class MonitorFrame(wx.Frame):
       if (self.coot.is_alive()):
         self.coot.update_model(model_file)
         self.coot.close_maps()
-        self.coot.auto_load_maps(mtz_file)
+        #self.coot.auto_load_maps(mtz_file)
+        self.coot.auto_load_anom_maps(mtz_file)
 
   def check_next_prev_buttons(self):
     self.prev_button.Enable(True)

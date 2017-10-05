@@ -487,6 +487,17 @@ then click the "Run" button.""" % out_file)
     return (imol1, imol2)
 
   @coot_log
+  def auto_load_anom_maps (self, map_file, f="2FOFCWT", fphi="PH",
+                      anomf="ANOM", anomphi="PANOM",
+      use_filled=True) :
+    map_file = to_str(map_file)
+    set_colour_map_rotation_for_map(0)
+    imol1 = make_and_draw_map(map_file, f, "%s%s" % (fphi, f), "", 0, 0)
+    imol2 = make_and_draw_map(map_file, anomf, anomphi, "", 0, 1)
+    set_scrollable_map(imol1)
+    return (imol1, imol2)
+
+  @coot_log
   def load_phenix_refine_temp_files (self, tmp_dir, run_name) :
     tmp_dir = to_unicode(tmp_dir)
     run_name = to_unicode(run_name)
