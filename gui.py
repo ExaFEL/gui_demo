@@ -61,6 +61,9 @@ class file_manager(object):
         self.unique_prefixes.append(new_prefixes[i][0])
         self.unique_times.append(new_prefixes[i][1])
 
+    # overide sorting, use alphanumeric order
+    self.unique_prefixes.sort()
+
   def at_latest(self):
     '''
     Determine if current position is at the most recent file
