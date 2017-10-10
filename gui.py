@@ -61,8 +61,8 @@ class file_manager(object):
         self.unique_prefixes.append(new_prefixes[i][0])
         self.unique_times.append(new_prefixes[i][1])
 
-    # overide sorting, use alphanumeric order
-    self.unique_prefixes.sort()
+      # overide sorting, use alphanumeric order
+      self.unique_prefixes.sort()
 
   def at_latest(self):
     '''
@@ -412,6 +412,9 @@ class MonitorFrame(wx.Frame):
     self.Bind(wx.EVT_TIMER, self.UpdateView, self.timer)
     self.auto_update = True
 
+    # track current tag
+    self.current_prefix = None
+
     # section for progress
     progress_panel = wx.Panel(self, style=wx.SUNKEN_BORDER)
     progress_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -503,7 +506,8 @@ class MonitorFrame(wx.Frame):
       command_args=coot_cmd, program_id='Coot', timeout=250)
 
   def update_view(self, prefix):
-    if (prefix is not None):
+    if ( (prefix is not None) and (prefix != self.current_prefix) ):
+      self.current_prefix = prefix
       self.file_text.SetLabel(os.path.basename(prefix))
       f = open(prefix + '.json', 'r')
       table = json.load(f)
