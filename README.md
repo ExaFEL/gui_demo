@@ -1,4 +1,23 @@
 # Install psana and cctbx
+
+  ## Construct conda environment on pslogin (conda version 4.6.14)
+  conda create -y -n gui_demo <br />
+  conda activate gui_demo <br />
+  conda install -y --channel lcls-rhel7 psana-conda <br />
+  conda install -y future libtiff tqdm=4.23.4 wxpython=3 <br />
+  conda install -y -c conda-forge orderedset procrunner
+
+  ## Get CCTBX sources on pslogin 
+  python bootstrap.py hot update --builder=xfel --cciuser=\<username\>
+
+  ## Build CCTBX on psana
+  python bootstrap.py build --builder=xfel --use-conda=${CONDA_PREFIX} --nproc=32
+
+  ## Starting GUI
+  source \<CCTBX installation\>/build/setpaths.sh
+  libtbx.python gui_demo/gui.py
+
+# Old instructions for Cori
   ## conda
   module load python <br />
   conda create -n gui_demo <br />
