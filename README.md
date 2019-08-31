@@ -14,7 +14,7 @@
   python bootstrap.py build --builder=xfel --use-conda=${CONDA_PREFIX} --nproc=32
 
   ## Starting GUI
-  source \<CCTBX installation\>/build/setpaths.sh
+  source \<CCTBX installation\>/build/setpaths.sh <br />
   libtbx.python gui_demo/gui.py
 
 # Old instructions for Cori
