@@ -53,17 +53,18 @@
   python gui.py
   
 # Quick Start Guide
-  Guide to displaying beta-blip example. This requires downloading an example json, mtz, and pdb file.
+  Guide to displaying beta-blip example. This requires downloading an example json, mtz, and pdb file. <br />
   Download gui_demo_example folder from https://stanford.box.com/s/khiepwwd7740u2u5s278rgj7infmwnq8 <br />
-  unzip gui_demo_example.zip <br />
+  Unzip gui_demo_example.zip <br />
   This folder contains the directory structure: <br />
       . <br />
       +-- _beta-blip_refine <br />
       |   +-- beta-blip_refine.json <br />
       |   +-- beta-blip_refine_001.mtz <br />
       |   +-- beta-blip_refine_001.pdb <br />
-  The files must be named after the folder, i.e. filename starts with beta-blip_refine <br />
-  Numbering convention starts from 001 to 999. The electron density with the largest number will be displayed. <br />
+  Notice that the files must be named after the folder, i.e. filename starts with beta-blip_refine <br />
+  Numbering convention for the pdb and mtz files start from 001 to 999. The electron density with the largest number will be displayed. <br />
+  Json file contains the crystallography statistics.  <br />
   
   conda activate gui_demo <br />
   source \<cctbx installation>/build/setpaths_all.sh <br />
