@@ -51,3 +51,14 @@
   export COOT_PREFIX=\<Coot directory\> <br />
   export GUI_DEMO_PREFIX=\<gui_demo directory\> <br />
   python gui.py
+  
+# Quick Start Guide
+  Guid to displaying beta-blip example
+  
+  conda activate gui_demo <br />
+  source \<cctbx installation>/build/setpaths_all.sh <br />
+  export COOT_PREFIX=\<Coot directory\> <br />
+  export GUI_DEMO_PREFIX=\<gui_demo directory\> <br />
+  Download gui_demo_example folder from https://stanford.box.com/s/khiepwwd7740u2u5s278rgj7infmwnq8
+  unzip gui_demo_example.zip
+  python gui.py -d \<gui_demo_example>
