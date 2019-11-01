@@ -497,15 +497,15 @@ class MonitorFrame(wx.Frame):
     self.SetMinSize(size)
 
     # start Coot
+    guidemo_path = os.environ.get('GUI_DEMO_PREFIX','')
     coot_path = os.environ.get('COOT_PREFIX','')
-    coot_path = '/reg/common/package/ccp4/ccp4-7.0/'
     if coot_path:
         coot_cmd = 'bin/coot '
     else:
         coot_cmd = 'coot '
     coot_cmd += '--no-guano --script %s' %\
-               os.path.join(libtbx.env.build_path.sh_value(),
-                            '../modules/gui_demo/Coot.py')
+               os.path.join(guidemo_path,
+                            'Coot.py')
     coot_cmd = [os.path.join(coot_path, coot_cmd)]
     self.coot = xmlrpc_utils.external_program_server(
       command_args=coot_cmd, program_id='Coot', timeout=250)

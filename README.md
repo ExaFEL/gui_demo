@@ -49,4 +49,5 @@
   source activate gui_demo <br />
   source \<cctbx installation>/build/setpaths_all.sh <br />
   export COOT_PREFIX=\<Coot directory\> <br />
+  export GUI_DEMO_PREFIX=\<gui_demo directory\> <br />
   python gui.py
