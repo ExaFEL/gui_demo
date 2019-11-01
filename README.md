@@ -61,4 +61,4 @@
   export GUI_DEMO_PREFIX=\<gui_demo directory\> <br />
   Download gui_demo_example folder from https://stanford.box.com/s/khiepwwd7740u2u5s278rgj7infmwnq8 <br />
   unzip gui_demo_example.zip <br />
-  python gui.py -d \<gui_demo_example> <br />
+  python gui.py -d \<gui_demo_example directory> <br />
