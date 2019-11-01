@@ -498,7 +498,7 @@ class MonitorFrame(wx.Frame):
 
     # start Coot
     coot_path = os.environ.get('COOT_PREFIX','')
-    coot_cmd = 'bin/coot --no-guano --script %s' %\
+    coot_cmd = 'coot --no-guano --script %s' %\
                os.path.join(libtbx.env.build_path.sh_value(),
                             '../modules/gui_demo/Coot.py')
     coot_cmd = [os.path.join(coot_path, coot_cmd)]
