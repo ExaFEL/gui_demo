@@ -56,14 +56,14 @@
   Guide to displaying beta-blip example. This requires downloading an example json, mtz, and pdb file.
   Download gui_demo_example folder from https://stanford.box.com/s/khiepwwd7740u2u5s278rgj7infmwnq8 <br />
   unzip gui_demo_example.zip <br />
-  This folder contains the directory structure:
-      .
-      +-- _beta-blip_refine
-      |   +-- beta-blip_refine.json
-      |   +-- beta-blip_refine_001.mtz
-      |   +-- beta-blip_refine_001.pdb
-  The files must be named after the folder, i.e. filename starts with beta-blip_refine
-  Numbering convention starts from 001 to 999. The electron density with the largest number will be displayed.
+  This folder contains the directory structure: <br />
+      . <br />
+      +-- _beta-blip_refine <br />
+      |   +-- beta-blip_refine.json <br />
+      |   +-- beta-blip_refine_001.mtz <br />
+      |   +-- beta-blip_refine_001.pdb <br />
+  The files must be named after the folder, i.e. filename starts with beta-blip_refine <br />
+  Numbering convention starts from 001 to 999. The electron density with the largest number will be displayed. <br />
   
   conda activate gui_demo <br />
   source \<cctbx installation>/build/setpaths_all.sh <br />
